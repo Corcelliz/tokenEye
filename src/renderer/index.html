@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard de Tokens</title>
+  <link rel="stylesheet" href="styles/fonts.css" />
+  <link rel="stylesheet" href="styles/tokens.css" />
+  <link rel="stylesheet" href="styles/layout.css" />
+  <link rel="stylesheet" href="styles/components.css" />
+</head>
+<body>
+  <div class="pagina">
+    <header class="cabecalho">
+      <div>
+        <p class="rotulo">DASHBOARD DE TOKENS</p>
+        <h1 class="titulo-pagina">Seu consumo do Claude</h1>
+      </div>
+      <div class="indicador-ao-vivo" id="indicador-ao-vivo">
+        <span class="bolinha" aria-hidden="true"></span>
+        <span id="texto-ao-vivo">ao vivo · atualizado às --:--</span>
+      </div>
+    </header>
+
+    <div id="estado-carregando" class="estado-tela">Carregando os logs do Claude Code…</div>
+
+    <div id="estado-vazio" class="estado-tela" hidden>
+      <p id="mensagem-vazio"></p>
+    </div>
+
+    <div id="estado-erro" class="estado-tela" hidden>
+      <p id="mensagem-erro"></p>
+    </div>
+
+    <main id="conteudo-principal" hidden>
+      <!-- Limites do plano: digitados/colados por mim, nunca lidos dos logs. -->
+      <section class="cartao cartao-limites" aria-labelledby="titulo-limites">
+        <div class="cabecalho-limites">
+          <p class="rotulo" id="titulo-limites">LIMITES DO PLANO</p>
+          <span class="selo-origem" id="selo-origem-limites">manual</span>
+          <button type="button" class="botao botao-secundario" id="botao-atualizar-limites"
+            title="Colar à mão o texto da página de uso do claude.ai">Atualizar</button>
+        </div>
+
+        <p class="limites-vazio" id="limites-vazio">
+          Nenhuma leitura ainda. Os números chegam sozinhos quando você usa o Claude Code com a linha de status
+          configurada (veja o README), ou clique em <strong>Atualizar</strong> para colar do claude.ai.
+        </p>
+
+        <div class="limite" id="limite-sessao" hidden>
+          <div class="limite-topo">
+            <div>
+              <p class="limite-nome">Sessão atual</p>
+              <p class="limite-reinicio" data-campo="reinicio"></p>
+            </div>
+            <p class="limite-valor">
+              <span class="selo-alerta" data-campo="alerta" hidden></span>
+              <span data-campo="percentual"></span>
+            </p>
+          </div>
+          <div class="trilho-limite" role="progressbar" aria-label="Sessão atual" aria-valuemin="0" aria-valuemax="100">
+            <div class="barra-limite" data-campo="barra"></div>
+          </div>
+        </div>
+
+        <div class="limite" id="limite-semana" hidden>
+          <div class="limite-topo">
+            <div>
+              <p class="limite-nome">Esta semana</p>
+              <p class="limite-reinicio" data-campo="reinicio"></p>
+            </div>
+            <p class="limite-valor">
+              <span class="selo-alerta" data-campo="alerta" hidden></span>
+              <span data-campo="percentual"></span>
+            </p>
+          </div>
+          <div class="trilho-limite" role="progressbar" aria-label="Esta semana" aria-valuemin="0" aria-valuemax="100">
+            <div class="barra-limite" data-campo="barra"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cartoes-resumo">
+        <article class="cartao cartao-metrica">
+          <p class="rotulo-cartao">HOJE</p>
+          <p class="numero-grande" id="hoje-numero">0</p>
+          <p class="legenda">entrada + saída</p>
+          <p class="detalhe-tokens" id="hoje-detalhe"></p>
+        </article>
+        <article class="cartao cartao-metrica">
+          <p class="rotulo-cartao">7 DIAS</p>
+          <p class="numero-grande" id="dias7-numero">0</p>
+          <p class="legenda">entrada + saída</p>
+          <p class="detalhe-tokens" id="dias7-detalhe"></p>
+        </article>
+        <article class="cartao cartao-metrica">
+          <p class="rotulo-cartao">MÊS</p>
+          <p class="numero-grande" id="mes-numero">0</p>
+          <p class="legenda">entrada + saída</p>
+          <p class="detalhe-tokens" id="mes-detalhe"></p>
+        </article>
+      </section>
+
+      <section class="linha-graficos">
+        <article class="cartao cartao-grafico">
+          <p class="rotulo">POR DIA · ÚLTIMOS 14 DIAS</p>
+          <div id="grafico-por-dia" class="grafico-barras"></div>
+        </article>
+        <article class="cartao cartao-modelos">
+          <div>
+            <p class="rotulo">POR MODELO</p>
+            <p class="subtitulo-cartao">entrada + saída · todo o período</p>
+          </div>
+          <div id="rosca-modelos" class="rosca"></div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="dialogo-limites" class="dialogo" aria-labelledby="titulo-dialogo-limites">
+    <form id="form-limites" class="form-limites" novalidate>
+      <p class="rotulo" id="titulo-dialogo-limites">ATUALIZAR LIMITES</p>
+      <p class="instrucao">
+        No claude.ai, abra <strong>Configurações → Uso</strong>, selecione o bloco de
+        “Sessão atual” até “Esta semana”, copie (Ctrl+C) e cole aqui (Ctrl+V).
+      </p>
+
+      <label class="campo-rotulo" for="texto-limites">Texto copiado</label>
+      <textarea id="texto-limites" class="campo" rows="6" maxlength="5000"
+        placeholder="Sessão atual&#10;Reinicia sáb., 00:30&#10;36% usado&#10;Esta semana&#10;Reinicia domingo, 04:00&#10;66% usado"></textarea>
+
+      <fieldset id="campos-limites" class="campos-manuais" hidden>
+        <legend class="campo-rotulo">Ou preencha à mão</legend>
+        <div class="grade-campos">
+          <label for="sessao-percentual">Sessão (%)</label>
+          <input id="sessao-percentual" class="campo" type="number" min="0" max="100" step="1" inputmode="numeric" />
+          <label for="sessao-reinicia">Reinicia</label>
+          <input id="sessao-reinicia" class="campo" type="text" maxlength="60" placeholder="sáb., 00:30" />
+          <label for="semana-percentual">Semana (%)</label>
+          <input id="semana-percentual" class="campo" type="number" min="0" max="100" step="1" inputmode="numeric" />
+          <label for="semana-reinicia">Reinicia</label>
+          <input id="semana-reinicia" class="campo" type="text" maxlength="60" placeholder="domingo, 04:00" />
+        </div>
+      </fieldset>
+
+      <p class="mensagem-form" id="mensagem-limites" role="alert"></p>
+
+      <div class="acoes-form">
+        <button type="button" class="botao botao-link" id="botao-preencher-mao">Preencher à mão</button>
+        <span class="espaco"></span>
+        <button type="button" class="botao botao-secundario" id="botao-cancelar-limites">Cancelar</button>
+        <button type="submit" class="botao botao-primario">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="js/format.js"></script>
+  <script src="js/rosca.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/limites.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

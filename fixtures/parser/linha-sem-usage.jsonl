@@ -1,0 +1,2 @@
+{"type":"user","timestamp":"2026-11-09T12:00:01.000Z","sessionId":"sessao-ficticia-1","message":{"role":"user"}}
+{"type":"assistant","timestamp":"2026-11-09T12:00:02.000Z","sessionId":"sessao-ficticia-1","message":{"id":"msg-ficticio-2","model":"claude-sonnet-5-5"}}

@@ -1,0 +1,16 @@
+node_modules/
+dist/
+docs/screenshots/*.png
+*.log
+.DS_Store
+Thumbs.db
+
+# dados locais/configuracoes do app (nunca versionar)
+userData/
+*.sqlite
+
+# nunca versionar logs reais, mesmo que alguem copie por engano
+fixtures/reais/
+
+# configuracao local do Claude Code (tem o caminho da pasta pessoal)
+.claude/settings.local.json

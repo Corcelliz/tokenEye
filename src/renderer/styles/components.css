@@ -1,0 +1,501 @@
+/* Componentes visuais: cartoes, rotulos, grafico de barras, lista por
+   modelo e indicador "ao vivo" (ver Guia visual.md). */
+
+.rotulo,
+.rotulo-cartao {
+  font-family: var(--fonte-texto);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent-dark);
+  margin: 0;
+}
+
+.cartao {
+  background: var(--card-dark);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--raio-cartao);
+  padding: 24px;
+}
+
+.cartao-metrica {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px 24px;
+}
+
+.numero-grande {
+  font-family: var(--fonte-titulo);
+  font-weight: 600;
+  font-size: 44px;
+  line-height: 1.05;
+  color: var(--accent-dark);
+  margin: 0;
+}
+
+.legenda {
+  color: var(--text-2-dark);
+  font-size: 14px;
+  margin: 0;
+}
+
+.detalhe-tokens {
+  color: var(--text-3-dark);
+  font-size: 13px;
+  margin: 0;
+}
+
+.cartao-grafico,
+.cartao-modelos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Grafico de barras por dia, feito com divs (sem biblioteca). */
+.grafico-barras {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  flex: 1;
+  min-height: 120px;
+  border-top: 1px solid var(--border-dark);
+  padding-top: 8px;
+}
+
+.barra-dia {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.barra-dia .barra {
+  width: 100%;
+  background: var(--accent-dark);
+  border-radius: 4px 4px 0 0;
+  min-height: 2px;
+}
+
+.barra-dia .rotulo-dia {
+  font-size: 10px;
+  color: var(--text-3-dark);
+  white-space: nowrap;
+}
+
+/* ---------- Rosca por modelo (SVG, ver js/rosca.js) ---------- */
+.subtitulo-cartao {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--text-3-dark);
+}
+
+.rosca {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+  color: var(--text-2-dark);
+  font-size: 13px;
+}
+
+.rosca-figura {
+  position: relative;
+  flex: 0 0 auto;
+  width: 112px;
+  height: 112px;
+}
+
+.rosca-figura svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.fatia {
+  fill: none;
+  stroke-width: 16;
+  transition: opacity 0.15s ease;
+}
+.fatia-opus { stroke: var(--serie-opus); }
+.fatia-sonnet { stroke: var(--serie-sonnet); }
+.fatia-haiku { stroke: var(--serie-haiku); }
+.fatia-outros { stroke: var(--serie-outros); }
+
+/* Texto do centro: total, ou o modelo em destaque. */
+.rosca-centro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none; /* deixa o mouse chegar nas fatias */
+}
+
+.rosca-valor {
+  font-family: var(--fonte-titulo);
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.1;
+  color: var(--text-1-dark);
+}
+
+.rosca-rotulo {
+  max-width: 72px;
+  font-size: 10px;
+  line-height: 1.3;
+  color: var(--text-3-dark);
+}
+
+.legenda-rosca {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.legenda-linha {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  column-gap: 8px;
+  align-items: start;
+  padding: 2px 4px;
+  border-radius: 6px;
+  transition: opacity 0.15s ease;
+}
+.legenda-linha:focus-visible {
+  outline: 2px solid var(--accent-dark);
+  outline-offset: 2px;
+}
+
+.amostra {
+  width: 10px;
+  height: 10px;
+  margin-top: 3px;
+  border-radius: 3px;
+}
+.amostra-opus { background: var(--serie-opus); }
+.amostra-sonnet { background: var(--serie-sonnet); }
+.amostra-haiku { background: var(--serie-haiku); }
+.amostra-outros { background: var(--serie-outros); }
+
+.legenda-textos,
+.legenda-numeros {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.legenda-numeros { align-items: flex-end; }
+
+.legenda-nome {
+  font-weight: 600;
+  color: var(--text-1-dark);
+}
+
+.legenda-versoes,
+.legenda-valor {
+  font-size: 11px;
+  color: var(--text-3-dark);
+  overflow-wrap: anywhere;
+}
+
+.legenda-percentual {
+  color: var(--text-1-dark);
+}
+
+.legenda-percentual,
+.legenda-valor {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Destaque: o que nao esta em foco fica mais apagado. */
+.rosca.com-destaque .fatia:not(.destacada) { opacity: 0.3; }
+.rosca.com-destaque .legenda-linha:not(.destacada) { opacity: 0.5; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fatia,
+  .legenda-linha { transition: none; }
+}
+
+/* ---------- Limites do plano (entrada manual) ---------- */
+.cartao-limites {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 40px;
+  row-gap: 14px;
+  padding: 18px 24px 20px;
+}
+
+.cabecalho-limites {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cabecalho-limites .botao {
+  margin-left: auto; /* empurra o botao para a direita */
+}
+
+/* Selo de origem do dado (Guia visual: "medido", "estimado" ou "manual"). */
+.selo-origem {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--text-2-dark);
+  border: 1px solid var(--border-dark);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.limites-vazio {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--text-2-dark);
+  font-size: 14px;
+}
+
+.limite {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.limite-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.limite-nome {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-1-dark);
+}
+
+.limite-reinicio {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text-3-dark);
+}
+
+.limite-valor {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-1-dark);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.trilho-limite {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border-dark);
+  overflow: hidden;
+}
+
+.barra-limite {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent-dark);
+  transition: width 0.4s ease;
+}
+
+/* Alerta: cor + icone + texto (nunca so cor). */
+.nivel-atencao .barra-limite { background: var(--warn); }
+.nivel-critico .barra-limite { background: var(--danger); }
+
+.selo-alerta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.nivel-atencao .selo-alerta { color: var(--warn); }
+.nivel-critico .selo-alerta { color: var(--danger); }
+
+.icone-alerta-marca {
+  fill: none;
+  stroke: var(--card-dark);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barra-limite { transition: none; }
+}
+
+@media (max-width: 760px) {
+  .cartao-limites { grid-template-columns: 1fr; }
+}
+
+/* Mesmo cuidado do .estado-tela[hidden] (layout.css): sem isto, o display
+   destas classes venceria o atributo hidden e o bloco continuaria visivel. */
+.limite[hidden],
+.limites-vazio[hidden],
+.selo-alerta[hidden],
+.campos-manuais[hidden] {
+  display: none;
+}
+
+/* ---------- Botoes ---------- */
+.botao {
+  font: 600 13px var(--fonte-texto);
+  border-radius: 8px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.botao-secundario {
+  background: transparent;
+  color: var(--text-1-dark);
+  border-color: var(--border-dark);
+}
+.botao-secundario:hover { border-color: var(--text-3-dark); }
+
+.botao-primario {
+  background: var(--accent-dark);
+  color: var(--ink);
+}
+.botao-primario:hover { filter: brightness(1.08); }
+
+.botao-link {
+  background: none;
+  color: var(--accent-dark);
+  padding-left: 0;
+  padding-right: 0;
+}
+.botao-link:hover { text-decoration: underline; }
+
+.botao:focus-visible,
+.campo:focus-visible {
+  outline: 2px solid var(--accent-dark);
+  outline-offset: 2px;
+}
+
+/* ---------- Janelinha (dialog) de atualizar limites ---------- */
+.dialogo {
+  background: var(--card-dark);
+  color: var(--text-1-dark);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--raio-cartao);
+  padding: 24px;
+  width: min(520px, calc(100vw - 48px));
+}
+
+.dialogo::backdrop {
+  background: rgba(10, 13, 20, 0.7);
+}
+
+.form-limites {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.instrucao {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-2-dark);
+}
+
+.campo-rotulo {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2-dark);
+}
+
+.campo {
+  width: 100%;
+  background: var(--ink);
+  color: var(--text-1-dark);
+  border: 1px solid var(--border-dark);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: 400 14px var(--fonte-texto);
+}
+.campo::placeholder { color: var(--text-3-dark); }
+textarea.campo {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.campos-manuais {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border-dark);
+  border-radius: 12px;
+}
+
+.grade-campos {
+  display: grid;
+  grid-template-columns: auto 80px auto 1fr;
+  gap: 8px 12px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-2-dark);
+}
+
+.mensagem-form {
+  margin: 0;
+  font-size: 13px;
+  color: var(--warn);
+}
+.mensagem-form:empty { display: none; }
+
+.acoes-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.acoes-form .espaco { flex: 1; }
+
+/* Indicador "ao vivo": bolinha pulsando devagar. */
+.indicador-ao-vivo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-2-dark);
+  padding-top: 6px;
+}
+
+.bolinha {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+  animation: pulsar 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bolinha {
+    animation: none;
+  }
+}
+
+@keyframes pulsar {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}

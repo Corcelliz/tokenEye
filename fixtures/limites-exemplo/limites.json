@@ -1,0 +1,11 @@
+{
+  "versao": 1,
+  "alerta": { "atencao": 80, "critico": 95 },
+  "leituras": [
+    {
+      "lidoEm": "2026-11-09T23:40:00.000Z",
+      "sessao": { "percentual": 36, "reinicia": "sáb., 00:30" },
+      "semana": { "percentual": 84, "reinicia": "domingo, 04:00" }
+    }
+  ]
+}
