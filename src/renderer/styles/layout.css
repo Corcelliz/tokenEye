@@ -1,0 +1,90 @@
+/* Estrutura geral da pagina: fundo, cabecalho e grades que empilham em
+   janelas estreitas (minimo 760px, conforme o Guia visual). */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark; /* campos e barras de rolagem nativos no tema escuro */
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--ink);
+  color: var(--text-1-dark);
+  font-family: var(--fonte-texto);
+}
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 32px;
+  height: 100vh;
+}
+
+.cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.titulo-pagina {
+  font-family: var(--fonte-titulo);
+  font-weight: 600;
+  font-size: 28px;
+  line-height: 1.1;
+  margin: 4px 0 0;
+}
+
+#conteudo-principal {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+  min-height: 0; /* sem isto, um filho com flex:1 nao consegue crescer dentro de um pai flex */
+}
+
+.cartoes-resumo {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.linha-graficos {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr; /* a rosca precisa de um pouco mais de largura que a lista */
+  grid-template-rows: 1fr;
+  gap: 20px;
+  flex: 1;
+}
+
+@media (max-width: 760px) {
+  .cartoes-resumo {
+    grid-template-columns: 1fr;
+  }
+  .linha-graficos {
+    grid-template-columns: 1fr;
+  }
+}
+
+.estado-tela {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-2-dark);
+  font-size: 16px;
+  padding: 32px;
+}
+
+/* O atributo "hidden" tem a mesma especificidade da classe acima; sem isto
+   aqui, a regra de cima venceria e a tela escondida continuaria aparecendo. */
+.estado-tela[hidden] {
+  display: none;
+}

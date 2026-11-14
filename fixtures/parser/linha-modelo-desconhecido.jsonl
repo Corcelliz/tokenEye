@@ -1,0 +1,1 @@
+{"type":"assistant","timestamp":"2026-11-09T12:00:06.000Z","sessionId":"sessao-ficticia-1","requestId":"req-ficticio-5","isSidechain":false,"message":{"id":"msg-ficticio-5","model":"claude-modelo-futuro-99","usage":{"input_tokens":7,"output_tokens":8,"cache_creation_input_tokens":0,"cache_read_input_tokens":0}}}

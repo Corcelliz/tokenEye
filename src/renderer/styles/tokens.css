@@ -1,0 +1,29 @@
+/* Variaveis de cor e tipografia, extraidas do "Guia visual.md" (deck
+   "Fluente em Claude: Resumo"). Tema escuro e o padrao do app na Fase 1. */
+:root {
+  --ink: #161b26;
+  --accent-dark: #f08a57;
+  --text-1-dark: #f6f3ee;
+  --text-2-dark: #b9bfcc;
+  --text-3-dark: #8d95a6;
+
+  /* Derivadas (nao vem do deck, ajustadas para contraste no tema escuro) */
+  --card-dark: #1d2330;
+  --border-dark: #2b3345;
+  --ok: #7fb899;
+  --warn: #e0b04a;
+  --danger: #e0645a;
+
+  /* Cores das familias de modelo na rosca. Conferidas com o validador de
+     paleta (daltonismo e contraste) contra o fundo do cartao #1d2330.
+     A cor segue a familia, nunca a posicao no ranking. */
+  --serie-opus: #e26a35;
+  --serie-sonnet: #9085e9;
+  --serie-haiku: #199e70;
+  --serie-outros: #6b7385; /* cinza de proposito: "outros" nao e um modelo so */
+
+  --fonte-titulo: 'Space Grotesk', sans-serif;
+  --fonte-texto: 'Inter', sans-serif;
+
+  --raio-cartao: 16px;
+}
