@@ -11,6 +11,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { interpretarReinicio } = require('./limites.js');
 
 const NOME_ARQUIVO = 'limites-auto.json';
 const NOME_ARQUIVO_CHAMADA = 'statusline-ultima-chamada.json';
@@ -120,7 +121,13 @@ function lerLimitesAuto(pastaDados) {
 function combinarLimites(manual, auto, agora = new Date()) {
   const resultado = { alerta: manual.alerta };
   for (const nome of ['sessao', 'semana']) {
-    const leituraManual = manual[nome] ? { ...manual[nome], reiniciaEm: null, origem: 'manual' } : null;
+    // O texto colado diz "Reinicia sáb., 00:30": converte para um instante exato,
+    // para o app saber quando essa leitura deixou de valer.
+    let leituraManual = null;
+    if (manual[nome]) {
+      const instante = interpretarReinicio(manual[nome].reinicia, Date.parse(manual[nome].lidoEm));
+      leituraManual = { ...manual[nome], reiniciaEm: instante ? new Date(instante).toISOString() : null, origem: 'manual' };
+    }
     let leituraAuto = null;
     if (auto && auto[nome]) {
       const { atualizadoEm, ...valores } = auto[nome];

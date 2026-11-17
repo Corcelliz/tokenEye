@@ -105,8 +105,17 @@ function agendarEnvioAoVivo() {
 // Quando a ultima leitura ja ficou velha, a barra e atualizada por uma
 // estimativa feita com os tokens dos logs (ver estimativa.js).
 function montarLimites() {
-  const combinados = combinarLimites(store.obterLimites(), lerLimitesAuto(PASTA_DADOS));
-  return aplicarEstimativa(combinados, agregador.obterEventos());
+  const auto = lerLimitesAuto(PASTA_DADOS);
+  const combinados = combinarLimites(store.obterLimites(), auto);
+
+  // Leituras para calibrar a estimativa: o historico manual mais a automatica.
+  const calibracoes = store.listarLeituras();
+  for (const nome of ['sessao', 'semana']) {
+    if (auto && auto[nome]) {
+      calibracoes.push({ nome, percentual: auto[nome].percentual, reiniciaEm: auto[nome].reiniciaEm, lidoEm: auto[nome].atualizadoEm || auto.atualizadoEm });
+    }
+  }
+  return aplicarEstimativa(combinados, agregador.obterEventos(), calibracoes);
 }
 
 function enviarLimitesParaTela() {

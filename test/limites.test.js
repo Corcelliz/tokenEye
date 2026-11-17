@@ -84,3 +84,15 @@ test('validarCampos recusa porcentagem fora de 0 a 100 e formulario todo vazio',
   assert.equal(validarCampos({ sessao: { percentual: '' }, semana: {} }).ok, false);
   assert.equal(validarCampos(null).ok, false);
 });
+
+test('interpretarReinicio entende dia da semana, hoje, amanha e "em X h Y min"', () => {
+  const { interpretarReinicio } = require('../src/main/limites.js');
+  const lido = Date.parse('2026-11-14T01:27:47Z'); // sexta 13/11, 22:27 em Sao Paulo
+  const sp = (ms) => new Date(ms - 3 * 3600 * 1000).toISOString().slice(0, 16);
+  assert.equal(sp(interpretarReinicio('sáb., 00:30', lido)), '2026-11-14T00:30');
+  assert.equal(sp(interpretarReinicio('domingo, 04:00', lido)), '2026-11-15T04:00');
+  assert.equal(sp(interpretarReinicio('amanhã, 00:28', lido)), '2026-11-14T00:28');
+  assert.equal(interpretarReinicio('em 2 h 14 min', lido), lido + (2 * 60 + 14) * 60 * 1000);
+  assert.equal(interpretarReinicio('texto sem horario', lido), null);
+  assert.equal(interpretarReinicio(null, lido), null);
+});

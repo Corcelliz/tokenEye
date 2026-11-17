@@ -54,7 +54,7 @@ window.DashboardLimites = (function () {
       if (dados.origem === 'estimado' && dados.baseadoEm) {
         // A barra e uma conta feita com os logs a partir de uma leitura anterior.
         const base = formato.momentoLeitura(dados.baseadoEm.lidoEm, 'lido');
-        partesReinicio.push(`estimado · base ${formato.numero(dados.baseadoEm.percentual)}% ${base}`);
+        partesReinicio.push(`estimado · calibrado com ${formato.numero(dados.baseadoEm.percentual)}% ${base}`);
       } else {
         const verbo = dados.origem === 'automatico' ? 'atualizado' : 'lido';
         partesReinicio.push(formato.momentoLeitura(dados.lidoEm, verbo));
