@@ -51,6 +51,8 @@ function criarAgregador() {
   const porDia = new Map(); // 'YYYY-MM-DD' -> totaisVazios()
   const porModelo = new Map(); // nome do modelo -> totaisVazios()
   const messageIdsVistos = new Set();
+  const eventos = [];
+  let eventosDesordenados = false;
   const estatisticas = { linhasComUso: 0, linhasIgnoradas: 0, duplicadas: 0 };
 
   // Recebe um registro ja extraido pelo parser.js. Ignora silenciosamente
@@ -69,7 +71,26 @@ function criarAgregador() {
     if (!porModelo.has(registro.modelo)) porModelo.set(registro.modelo, totaisVazios());
     somarEm(porModelo.get(registro.modelo), registro.tokens);
 
+    // Lista compacta (horario + entrada/saida) usada so para estimar os
+    // limites do plano. Mantida em ordem de horario.
+    const ts = Date.parse(registro.timestamp);
+    if (Number.isFinite(ts)) {
+      const evento = { ts, tokens: registro.tokens.entrada + registro.tokens.saida };
+      const ultimo = eventos[eventos.length - 1];
+      if (ultimo && ts < ultimo.ts) eventosDesordenados = true;
+      eventos.push(evento);
+    }
+
     estatisticas.linhasComUso++;
+  }
+
+  function obterEventos() {
+    // Ordena so quando precisa (a leitura inicial junta varios arquivos fora de ordem).
+    if (eventosDesordenados) {
+      eventos.sort((a, b) => a.ts - b.ts);
+      eventosDesordenados = false;
+    }
+    return eventos;
   }
 
   function registrarLinhaIgnorada() {
@@ -151,7 +172,7 @@ function criarAgregador() {
     };
   }
 
-  return { adicionarRegistro, registrarLinhaIgnorada, obterResumo };
+  return { adicionarRegistro, registrarLinhaIgnorada, obterResumo, obterEventos };
 }
 
 module.exports = { criarAgregador, diaEmSaoPaulo, familiaDoModelo, nomeCurtoDoModelo };

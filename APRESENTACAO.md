@@ -2,7 +2,7 @@
 
 Aplicativo desktop para Windows que mostra, ao vivo, quantos tokens do Claude você está consumindo. Ele lê os logs locais do Claude Code e transforma isso em números e gráficos simples de acompanhar.
 
-Projeto de estudo, feito com Electron e HTML/CSS/JavaScript puros, sem frameworks.
+Projeto pessoal de estudo, feito com Electron e HTML/CSS/JavaScript puros, sem frameworks.
 
 ## O que ele mostra
 
@@ -64,6 +64,6 @@ scripts/        prova de leitura, smoke test, screenshot e linha de status
 ## Situação
 
 - **Fase 1 (MVP):** concluída e conferida. O total de hoje bate com uma leitura independente, e a atualização ao vivo aparece em menos de 2 segundos.
-- **Limites do plano:** já disponíveis, com leitura automática e manual.
+- **Limites do plano:** já disponíveis, com leitura automática, manual e uma estimativa calculada pelos logs quando o percentual oficial não chega.
 - **Versão 2:** em planejamento, desenvolvida em uma branch própria.
 
