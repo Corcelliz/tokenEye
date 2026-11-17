@@ -51,13 +51,20 @@ window.DashboardLimites = (function () {
     } else {
       if (dados.reiniciaEm) partesReinicio.push(`Reinicia ${formato.reinicio(dados.reiniciaEm)}`);
       else if (dados.reinicia) partesReinicio.push(`Reinicia ${dados.reinicia}`);
-      const verbo = dados.origem === 'automatico' ? 'atualizado' : 'lido';
-      partesReinicio.push(formato.momentoLeitura(dados.lidoEm, verbo));
+      if (dados.origem === 'estimado' && dados.baseadoEm) {
+        // A barra e uma conta feita com os logs a partir de uma leitura anterior.
+        const base = formato.momentoLeitura(dados.baseadoEm.lidoEm, 'lido');
+        partesReinicio.push(`estimado · base ${formato.numero(dados.baseadoEm.percentual)}% ${base}`);
+      } else {
+        const verbo = dados.origem === 'automatico' ? 'atualizado' : 'lido';
+        partesReinicio.push(formato.momentoLeitura(dados.lidoEm, verbo));
+      }
     }
     campo('reinicio').textContent = partesReinicio.join(' · ');
 
     const percentualAtual = dados.expirado ? 0 : dados.percentual;
-    const percentualTexto = dados.expirado ? '—' : `${formato.numero(dados.percentual)}% usado`;
+    const prefixo = dados.origem === 'estimado' ? '~' : '';
+    const percentualTexto = dados.expirado ? '—' : `${prefixo}${formato.numero(dados.percentual)}% usado`;
     campo('percentual').textContent = percentualTexto;
     campo('barra').style.width = `${Math.min(100, Math.max(0, percentualAtual))}%`;
 
@@ -83,7 +90,10 @@ window.DashboardLimites = (function () {
   function atualizarSeloOrigem(dados) {
     const origens = new Set([dados.sessao, dados.semana].filter(Boolean).map((d) => d.origem));
     const selo = document.getElementById('selo-origem-limites');
-    if (origens.has('automatico') && origens.has('manual')) {
+    if (origens.has('estimado')) {
+      selo.textContent = 'estimado';
+      selo.title = 'Calculado pelo app com os tokens dos logs, a partir da última leitura. Não inclui o uso no claude.ai. A próxima leitura oficial substitui.';
+    } else if (origens.has('automatico') && origens.has('manual')) {
       selo.textContent = 'automático + manual';
       selo.title = 'Uma barra veio do Claude Code e a outra foi colada por você';
     } else if (origens.has('automatico')) {

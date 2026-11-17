@@ -13,6 +13,7 @@ const { parseLinha } = require('./parser.js');
 const { criarAgregador } = require('./aggregate.js');
 const { criarStore } = require('./store.js');
 const { extrairLimitesDoTexto, validarCampos } = require('./limites.js');
+const { aplicarEstimativa } = require('./estimativa.js');
 const { NOME_ARQUIVO: ARQUIVO_LIMITES_AUTO, lerLimitesAuto, combinarLimites } = require('./limitesAuto.js');
 
 // Variaveis de ambiente usadas pelos scripts de smoke test e screenshot
@@ -101,8 +102,11 @@ function agendarEnvioAoVivo() {
 
 // Limites do plano: a leitura automatica (gravada pelo script da linha de
 // status do Claude Code) junto com a manual; vale a mais recente.
+// Quando a ultima leitura ja ficou velha, a barra e atualizada por uma
+// estimativa feita com os tokens dos logs (ver estimativa.js).
 function montarLimites() {
-  return combinarLimites(store.obterLimites(), lerLimitesAuto(PASTA_DADOS));
+  const combinados = combinarLimites(store.obterLimites(), lerLimitesAuto(PASTA_DADOS));
+  return aplicarEstimativa(combinados, agregador.obterEventos());
 }
 
 function enviarLimitesParaTela() {
@@ -167,6 +171,7 @@ function iniciarObservador() {
     if (!caminhoArquivo.endsWith('.jsonl')) return;
     processarLinhas(leitor.lerNovidades(caminhoArquivo).linhas);
     agendarEnvioAoVivo();
+    agendarEnvioLimites(); // tokens novos mexem na estimativa dos limites
   };
   observador.on('add', aoMudar);
   observador.on('change', aoMudar);
