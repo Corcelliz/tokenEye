@@ -36,7 +36,13 @@ Limitações: os números só se renovam enquanto você usa o Claude Code (o per
 
 ### Estimativa automática, quando não chega o percentual oficial
 
-Nem sempre o Claude Code manda o `rate_limits` para a linha de status (por exemplo, o app desktop pode não mandar). Para a barra não ficar parada na última leitura, o app **estima** o valor: pega a última leitura (manual ou automática), calcula quantos % cada token valeu naquela janela e aplica a mesma taxa aos tokens novos dos logs (entrada + saída). A sessão usa blocos de 5 h; a semana usa os últimos 7 dias. A barra mostra "~" antes do número e o selo "estimado". Limitações: não enxerga o uso no claude.ai nem os pesos exatos de cada modelo, e a semana não percebe sozinha o reinício. Qualquer leitura oficial ou colada depois substitui a estimativa.
+Nem sempre o Claude Code manda o `rate_limits` para a linha de status (por exemplo, o app desktop pode não mandar). Para a barra não ficar parada numa leitura antiga, o app **estima** o valor da janela de agora:
+
+1. Das leituras guardadas (manuais e automáticas), escolhe a mais recente com pelo menos 10% e calcula a **taxa**: quantos % cada token (entrada + saída) valeu naquela janela. O horário de reinício colado ("sáb., 00:30", "amanhã, 04:00", "em 2 h 14 min") define onde a janela começa e termina.
+2. Multiplica essa taxa pelos tokens dos logs na janela atual: bloco de 5 h em andamento para a sessão e semana corrente (de 7 em 7 dias a partir do reinício conhecido) para a semana.
+3. Se a leitura exibida é de uma janela que já acabou, ela **não** é mostrada como valor de hoje: a barra passa a mostrar a estimativa da janela nova, com "~" antes do número, o selo "estimado" e "calibrado com 61% lido em 13/11".
+
+Limitações: não enxerga o uso no claude.ai nem os pesos exatos de cada modelo, e sem nenhuma leitura de pelo menos 10% o app não inventa número. Qualquer leitura oficial ou colada depois substitui a estimativa.
 
 ### Manual, como reserva
 

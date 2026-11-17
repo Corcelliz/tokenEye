@@ -78,7 +78,19 @@ function criarStore(pastaDados) {
     return obterLimites();
   }
 
-  return { obterLimites, adicionarLeitura };
+  // Todas as leituras guardadas, uma linha por bloco: serve para calibrar a
+  // estimativa com a melhor leitura, nao so a mais recente.
+  function listarLeituras() {
+    const lista = [];
+    for (const leitura of ler().leituras) {
+      for (const nome of ['sessao', 'semana']) {
+        if (leitura[nome]) lista.push({ nome, ...leitura[nome], lidoEm: leitura.lidoEm });
+      }
+    }
+    return lista;
+  }
+
+  return { obterLimites, adicionarLeitura, listarLeituras };
 }
 
 module.exports = { criarStore };

@@ -111,3 +111,44 @@ function validarCampos(campos) {
 }
 
 module.exports = { extrairLimitesDoTexto, validarCampos };
+
+// ----- Horario de reinicio do texto colado -----
+// "sáb., 00:30", "domingo, 04:00", "amanhã, 00:28", "hoje, 23:30" ou
+// "em 2 h 14 min" viram um instante (ms desde 1970), contado a partir de
+// quando a leitura foi feita. Fuso de Sao Paulo (UTC-3, sem horario de verao).
+// Se nao entender o texto, devolve null.
+const DIAS_DA_SEMANA = [['dom', 0], ['seg', 1], ['ter', 2], ['qua', 3], ['qui', 4], ['sex', 5], ['sab', 6]];
+const DESLOCAMENTO_SP_MS = -3 * 60 * 60 * 1000;
+const DIA_MS = 24 * 60 * 60 * 1000;
+
+function interpretarReinicio(texto, lidoEmMs) {
+  if (typeof texto !== 'string' || !Number.isFinite(lidoEmMs)) return null;
+  const t = texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+  const relativo = t.match(/\bem\s+(?:(\d+)\s*h)?\s*(?:(\d+)\s*min)?/);
+  if (relativo && (relativo[1] || relativo[2])) {
+    return lidoEmMs + ((Number(relativo[1]) || 0) * 60 + (Number(relativo[2]) || 0)) * 60 * 1000;
+  }
+
+  const horario = t.match(/(\d{1,2}):(\d{2})/);
+  if (!horario) return null;
+  const minutosDoDia = Number(horario[1]) * 60 + Number(horario[2]);
+
+  const relogioSp = new Date(lidoEmMs + DESLOCAMENTO_SP_MS); // getUTC* = relogio de Sao Paulo
+  const inicioDoDiaSp = Date.UTC(relogioSp.getUTCFullYear(), relogioSp.getUTCMonth(), relogioSp.getUTCDate());
+  const emDia = (dias) => inicioDoDiaSp + dias * DIA_MS + minutosDoDia * 60 * 1000 - DESLOCAMENTO_SP_MS;
+
+  let alvo = null;
+  if (/amanha/.test(t)) alvo = emDia(1);
+  else if (/hoje/.test(t)) alvo = emDia(0);
+  else {
+    const achado = DIAS_DA_SEMANA.find(([nome]) => new RegExp('(^|[^a-z])' + nome).test(t));
+    if (achado) {
+      alvo = emDia((achado[1] - relogioSp.getUTCDay() + 7) % 7);
+      if (alvo <= lidoEmMs) alvo += 7 * DIA_MS; // mesmo dia da semana, mas o horario ja passou: proxima semana
+    }
+  }
+  return alvo !== null && alvo > lidoEmMs ? alvo : null;
+}
+
+module.exports.interpretarReinicio = interpretarReinicio;
