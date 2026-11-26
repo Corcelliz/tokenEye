@@ -13,6 +13,7 @@
 // pesos exatos de cada modelo; a proxima leitura oficial vence.
 'use strict';
 const { interpretarReinicio } = require('./limites.js');
+const { listarBlocos } = require('./blocos.js');
 
 const HORA_MS = 60 * 60 * 1000;
 const JANELA_MS = { sessao: 5 * HORA_MS, semana: 7 * 24 * HORA_MS };
@@ -28,21 +29,7 @@ function somarEntre(eventos, deExclusivo, ateInclusivo) {
   return soma;
 }
 
-// Blocos de 5 h: o bloco comeca na primeira mensagem depois que o anterior
-// acabou (arredondada para a hora cheia) e dura 5 h.
-function listarBlocos(eventos) {
-  const blocos = [];
-  let atual = null;
-  for (const e of eventos) {
-    if (!atual || e.ts >= atual.fim) {
-      const inicio = Math.floor(e.ts / HORA_MS) * HORA_MS;
-      atual = { inicio, fim: inicio + JANELA_MS.sessao };
-      blocos.push(atual);
-    }
-  }
-  return blocos;
-}
-
+// Blocos de 5 h: a regra fica em blocos.js (tambem usada na lista da tela).
 function blocoEm(eventos, instante) {
   return listarBlocos(eventos).find((b) => b.inicio <= instante && instante < b.fim) || null;
 }

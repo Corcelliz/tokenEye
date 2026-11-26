@@ -499,3 +499,86 @@ textarea.campo {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.35; }
 }
+
+/* ---------- Tokens por projeto ---------- */
+.cartao-projetos {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.lista-projetos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.projeto-linha {
+  display: grid;
+  grid-template-columns: minmax(90px, 200px) 1fr 110px;
+  column-gap: 12px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.projeto-nome {
+  color: var(--text-1-dark);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projeto-trilho {
+  height: 8px;
+  background: var(--border-dark);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.projeto-barra {
+  display: block;
+  height: 100%;
+  background: var(--accent-dark);
+  border-radius: 4px;
+}
+
+.projeto-outros .projeto-barra { background: var(--serie-outros); }
+.projeto-outros .projeto-nome { color: var(--text-2-dark); }
+
+.projeto-numeros {
+  text-align: right;
+  color: var(--text-2-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.projeto-vazio {
+  color: var(--text-2-dark);
+  font-size: 13px;
+}
+
+/* ---------- Por projeto (barra empilhada + lista) ---------- */
+.barra-projetos { display: flex; gap: 3px; height: 14px; border-radius: 7px; overflow: hidden; }
+.trecho-projeto { min-width: 4px; }
+.lista-projetos { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px 24px; }
+.projeto-item { display: grid; grid-template-columns: 10px 1fr auto auto; column-gap: 8px; align-items: center; font-size: 13px; }
+.amostra-projeto { width: 10px; height: 10px; border-radius: 3px; }
+.projeto-percentual { font-weight: 600; color: var(--text-1-dark); font-variant-numeric: tabular-nums; }
+.projeto-valor { color: var(--text-3-dark); min-width: 52px; text-align: right; font-variant-numeric: tabular-nums; }
+.proj-c0 { background: #f08a57; }
+.proj-c1 { background: #9085e9; }
+.proj-c2 { background: #199e70; }
+.proj-c3 { background: #e0b04a; }
+.proj-c4 { background: #5fa8d3; }
+.proj-outros { background: var(--serie-outros); }
+
+/* ---------- Uso da semana (grafico de linha) ---------- */
+.linha-do-tempo { margin-top: 10px; width: 100%; }
+.grafico-linha-tempo { display: block; max-width: 100%; }
+.grade-linha { stroke: var(--border-dark); stroke-width: 1; }
+.grade-alerta { stroke: var(--warn); stroke-width: 1; stroke-dasharray: 3 4; opacity: 0.7; }
+.rotulo-eixo { fill: var(--text-3-dark); font-size: 10px; font-family: var(--fonte-texto); }
+.linha-serie { fill: none; stroke-width: 2; stroke: var(--accent-dark); }
+.ponto-serie { fill: var(--accent-dark); }

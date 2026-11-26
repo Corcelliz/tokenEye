@@ -65,3 +65,23 @@ test('linha em branco e ignorada sem erro', () => {
   const resultado = parseLinha('   ');
   assert.equal(resultado.ok, false);
 });
+
+test('projeto: guarda so o nome da ultima pasta do cwd (Windows ou Linux)', () => {
+  const { nomeDoProjeto } = require('../src/main/parser.js');
+  assert.equal(nomeDoProjeto('C:\\Users\\exemplo\\projetos\\meu-app'), 'meu-app');
+  assert.equal(nomeDoProjeto('C:\\Users\\exemplo\\projetos\\meu-app\\'), 'meu-app');
+  assert.equal(nomeDoProjeto('/home/exemplo/meu-app'), 'meu-app');
+  assert.equal(nomeDoProjeto(undefined), 'sem projeto');
+  assert.equal(nomeDoProjeto('C:\\'), 'C:'); // raiz do disco: nome da unidade, sem caminho
+  assert.equal(nomeDoProjeto(''), 'sem projeto');
+});
+
+test('o registro traz o nome do projeto e nunca o caminho completo', () => {
+  const linha = JSON.stringify({
+    type: 'assistant', timestamp: '2026-11-09T14:00:00.000Z', cwd: 'C:\\Users\\exemplo\\projetos\\estudo',
+    message: { id: 'm', model: 'claude-sonnet-5-5', usage: { input_tokens: 1, output_tokens: 1 } },
+  });
+  const { registro } = parseLinha(linha);
+  assert.equal(registro.projeto, 'estudo');
+  assert.equal(JSON.stringify(registro).includes('Users'), false);
+});

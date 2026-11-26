@@ -6,6 +6,8 @@
 'use strict';
 
 const DIAS_NO_GRAFICO = 14;
+const DIAS_POR_MODELO = 30; // janela movel da lista/rosca "por modelo" e "por projeto"
+const MAX_PROJETOS_NA_LISTA = 8; // o resto vira "outros"
 
 function diaEmSaoPaulo(timestampIso) {
   return new Date(timestampIso).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
@@ -49,7 +51,11 @@ function nomeCurtoDoModelo(nomeModelo) {
 
 function criarAgregador() {
   const porDia = new Map(); // 'YYYY-MM-DD' -> totaisVazios()
-  const porModelo = new Map(); // nome do modelo -> totaisVazios()
+  // 'YYYY-MM-DD' -> Map(nome do modelo -> totaisVazios()). Guardado por dia
+  // para a lista "por modelo" poder olhar so os ultimos 30 dias.
+  const porDiaModelo = new Map();
+  // Igual, mas por projeto (nome da ultima pasta do cwd).
+  const porDiaProjeto = new Map();
   const messageIdsVistos = new Set();
   const eventos = [];
   let eventosDesordenados = false;
@@ -68,8 +74,16 @@ function criarAgregador() {
     if (!porDia.has(dia)) porDia.set(dia, totaisVazios());
     somarEm(porDia.get(dia), registro.tokens);
 
-    if (!porModelo.has(registro.modelo)) porModelo.set(registro.modelo, totaisVazios());
-    somarEm(porModelo.get(registro.modelo), registro.tokens);
+    if (!porDiaModelo.has(dia)) porDiaModelo.set(dia, new Map());
+    const modelosDoDia = porDiaModelo.get(dia);
+    if (!modelosDoDia.has(registro.modelo)) modelosDoDia.set(registro.modelo, totaisVazios());
+    somarEm(modelosDoDia.get(registro.modelo), registro.tokens);
+
+    const projeto = registro.projeto || 'sem projeto';
+    if (!porDiaProjeto.has(dia)) porDiaProjeto.set(dia, new Map());
+    const projetosDoDia = porDiaProjeto.get(dia);
+    if (!projetosDoDia.has(projeto)) projetosDoDia.set(projeto, totaisVazios());
+    somarEm(projetosDoDia.get(projeto), registro.tokens);
 
     // Lista compacta (horario + entrada/saida) usada so para estimar os
     // limites do plano. Mantida em ordem de horario.
@@ -128,6 +142,40 @@ function criarAgregador() {
       porDiaGrafico.push({ dia: diaStr, ...comTotal(totais) });
     }
 
+    // "Por modelo": soma so os ultimos 30 dias (hoje e os 29 anteriores).
+    const trintaDiasAtrasStr = new Date(agora.getTime() - (DIAS_POR_MODELO - 1) * 24 * 60 * 60 * 1000)
+      .toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+    const porModelo = new Map(); // nome do modelo -> totais dentro da janela
+    for (const [dia, modelosDoDia] of porDiaModelo) {
+      if (dia < trintaDiasAtrasStr || dia > hojeStr) continue;
+      for (const [modelo, totais] of modelosDoDia) {
+        if (!porModelo.has(modelo)) porModelo.set(modelo, totaisVazios());
+        somarEm(porModelo.get(modelo), totais);
+      }
+    }
+
+    // "Por projeto": mesma janela de 30 dias, ordenado por entrada + saida.
+    // Mostra os maiores e junta o resto em "outros".
+    const porProjeto = new Map();
+    for (const [dia, projetosDoDia] of porDiaProjeto) {
+      if (dia < trintaDiasAtrasStr || dia > hojeStr) continue;
+      for (const [projeto, totais] of projetosDoDia) {
+        if (!porProjeto.has(projeto)) porProjeto.set(projeto, totaisVazios());
+        somarEm(porProjeto.get(projeto), totais);
+      }
+    }
+    const projetosOrdenados = [...porProjeto.entries()]
+      .map(([projeto, totais]) => ({ projeto, principal: principalDe(totais) }))
+      .filter((p) => p.principal > 0)
+      .sort((a, b) => b.principal - a.principal);
+    const totalProjetos = projetosOrdenados.reduce((acc, p) => acc + p.principal, 0);
+    const listaPorProjeto = projetosOrdenados.slice(0, MAX_PROJETOS_NA_LISTA);
+    const resto = projetosOrdenados.slice(MAX_PROJETOS_NA_LISTA);
+    if (resto.length > 0) {
+      listaPorProjeto.push({ projeto: `outros (${resto.length})`, principal: resto.reduce((acc, p) => acc + p.principal, 0), agrupado: true });
+    }
+    for (const item of listaPorProjeto) item.percentual = totalProjetos > 0 ? (item.principal / totalProjetos) * 100 : 0;
+
     const totalGeralTodosModelos = [...porModelo.values()].reduce((acc, t) => acc + totalDe(t), 0);
     const listaPorModelo = [...porModelo.entries()]
       .map(([modelo, totais]) => ({
@@ -168,6 +216,7 @@ function criarAgregador() {
       porDia: porDiaGrafico,
       porModelo: listaPorModelo,
       porFamilia: listaPorFamilia,
+      porProjeto: listaPorProjeto,
       estatisticas: { ...estatisticas },
     };
   }
@@ -175,4 +224,4 @@ function criarAgregador() {
   return { adicionarRegistro, registrarLinhaIgnorada, obterResumo, obterEventos };
 }
 
-module.exports = { criarAgregador, diaEmSaoPaulo, familiaDoModelo, nomeCurtoDoModelo };
+module.exports = { DIAS_POR_MODELO, criarAgregador, diaEmSaoPaulo, familiaDoModelo, nomeCurtoDoModelo };

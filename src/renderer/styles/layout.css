@@ -22,7 +22,7 @@ html, body {
   flex-direction: column;
   gap: 20px;
   padding: 24px 32px;
-  height: 100vh;
+  min-height: 100vh; /* cresce e rola quando ha mais cartoes que a janela comporta */
 }
 
 .cabecalho {
@@ -46,7 +46,6 @@ html, body {
   flex-direction: column;
   gap: 20px;
   flex: 1;
-  min-height: 0; /* sem isto, um filho com flex:1 nao consegue crescer dentro de um pai flex */
 }
 
 .cartoes-resumo {
@@ -60,7 +59,7 @@ html, body {
   grid-template-columns: 1.7fr 1fr; /* a rosca precisa de um pouco mais de largura que a lista */
   grid-template-rows: 1fr;
   gap: 20px;
-  flex: 1;
+  min-height: 260px;
 }
 
 @media (max-width: 760px) {

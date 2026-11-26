@@ -8,12 +8,14 @@ const fs = require('fs');
 const os = require('os');
 const chokidar = require('chokidar');
 
-const { criarLeitorDeLogs } = require('./logReader.js');
+const { carregarTudo: carregarLogsIniciais } = require('./carregamento.js');
 const { parseLinha } = require('./parser.js');
 const { criarAgregador } = require('./aggregate.js');
 const { criarStore } = require('./store.js');
 const { extrairLimitesDoTexto, validarCampos } = require('./limites.js');
 const { aplicarEstimativa } = require('./estimativa.js');
+const { montarLinhaDoTempo } = require('./historico.js');
+const { protegido } = require('./seguro.js');
 const { NOME_ARQUIVO: ARQUIVO_LIMITES_AUTO, lerLimitesAuto, combinarLimites } = require('./limitesAuto.js');
 
 // Variaveis de ambiente usadas pelos scripts de smoke test e screenshot
@@ -57,26 +59,11 @@ function processarLinhas(linhas) {
   }
 }
 
-// Le todos os logs existentes, uma vez, na abertura do app.
+// Le todos os logs existentes, uma vez, na abertura do app (ver carregamento.js).
 function carregarTudo() {
-  try {
-    if (!fs.existsSync(PASTA_LOGS)) {
-      estadoAtual = { tipo: 'vazio', mensagem: 'Pasta de logs do Claude Code não foi encontrada.' };
-      return;
-    }
-    leitor = criarLeitorDeLogs(PASTA_LOGS);
-    const arquivos = leitor.listarArquivos();
-    if (arquivos.length === 0) {
-      estadoAtual = { tipo: 'vazio', mensagem: 'Nenhum log encontrado ainda. Use o Claude Code para gerar dados.' };
-      return;
-    }
-    for (const arquivo of arquivos) {
-      processarLinhas(leitor.lerNovidades(arquivo).linhas);
-    }
-    estadoAtual = { tipo: 'pronto', mensagem: null };
-  } catch (erro) {
-    estadoAtual = { tipo: 'erro', mensagem: 'Não foi possível ler os logs: ' + erro.message };
-  }
+  const resultado = carregarLogsIniciais(PASTA_LOGS, processarLinhas);
+  estadoAtual = resultado.estado;
+  leitor = resultado.leitor;
 }
 
 function montarResposta() {
@@ -115,7 +102,10 @@ function montarLimites() {
       calibracoes.push({ nome, percentual: auto[nome].percentual, reiniciaEm: auto[nome].reiniciaEm, lidoEm: auto[nome].atualizadoEm || auto.atualizadoEm });
     }
   }
-  return aplicarEstimativa(combinados, agregador.obterEventos(), calibracoes);
+  const limites = aplicarEstimativa(combinados, agregador.obterEventos(), calibracoes);
+  // Linha do tempo: o historico de leituras manuais gravado em limites.json.
+  limites.historico = montarLinhaDoTempo(store.listarLeituras());
+  return limites;
 }
 
 function enviarLimitesParaTela() {
@@ -157,7 +147,8 @@ function iniciarObservadorDeLimites() {
 // o "hoje" vira sozinho na virada do dia.
 function iniciarVarreduraPeriodica() {
   if (estadoAtual.tipo !== 'pronto') return;
-  timerVarredura = setInterval(() => {
+  // protegido(): um erro numa varredura nao derruba o app; a proxima tenta de novo.
+  timerVarredura = setInterval(protegido(() => {
     for (const arquivo of leitor.listarArquivos()) {
       processarLinhas(leitor.lerNovidades(arquivo).linhas);
     }
@@ -165,7 +156,7 @@ function iniciarVarreduraPeriodica() {
     // Tambem reenvia os limites: cobre o observador falhar e faz a barra
     // perceber sozinha quando a janela de 5 h ou da semana reinicia.
     enviarLimitesParaTela();
-  }, INTERVALO_VARREDURA_MS);
+  }, 'varredura periodica'), INTERVALO_VARREDURA_MS);
 }
 
 // Comeca a observar a pasta de logs; quando um arquivo .jsonl muda, le so
@@ -176,12 +167,12 @@ function iniciarObservador() {
   // invertidas do caminho atrapalham o casamento de padroes glob do
   // chokidar. Filtra por .jsonl aqui dentro, no evento.
   observador = chokidar.watch(PASTA_LOGS, { ignoreInitial: true });
-  const aoMudar = (caminhoArquivo) => {
+  const aoMudar = protegido((caminhoArquivo) => {
     if (!caminhoArquivo.endsWith('.jsonl')) return;
     processarLinhas(leitor.lerNovidades(caminhoArquivo).linhas);
     agendarEnvioAoVivo();
     agendarEnvioLimites(); // tokens novos mexem na estimativa dos limites
-  };
+  }, 'observador de logs');
   observador.on('add', aoMudar);
   observador.on('change', aoMudar);
 }
@@ -225,6 +216,11 @@ function criarJanela() {
 
 async function capturarTela() {
   try {
+    // Estica a janela ate caber a pagina inteira (a pagina rola), para a
+    // captura mostrar todos os cartoes.
+    const alturaPagina = await janelaPrincipal.webContents.executeJavaScript('document.documentElement.scrollHeight');
+    janelaPrincipal.setContentSize(1100, Math.min(Math.max(alturaPagina, 720), 4000));
+    await new Promise((resolver) => setTimeout(resolver, 400));
     const imagem = await janelaPrincipal.webContents.capturePage();
     const pastaDestino = path.join(__dirname, '..', '..', 'docs', 'screenshots');
     fs.mkdirSync(pastaDestino, { recursive: true });

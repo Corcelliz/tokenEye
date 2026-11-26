@@ -113,3 +113,35 @@ test('registrarLinhaIgnorada conta sem afetar os totais', () => {
   assert.equal(resumo.estatisticas.linhasIgnoradas, 2);
   assert.equal(resumo.hoje.total, 0);
 });
+
+test('porModelo e porFamilia olham so os ultimos 30 dias', () => {
+  const agregador = criarAgregador();
+  // AGORA = 09/11. A janela de 30 dias comeca em 11/10 (hoje + 29 anteriores).
+  agregador.adicionarRegistro(registro({ messageId: 'dentro', timestamp: '2026-10-11T15:00:00.000Z', modelo: 'claude-sonnet-5-5', tokens: { entrada: 40 } }));
+  agregador.adicionarRegistro(registro({ messageId: 'fora', timestamp: '2026-10-10T15:00:00.000Z', modelo: 'claude-opus-5-5', tokens: { entrada: 1000 } }));
+  const resumo = agregador.obterResumo(AGORA);
+  assert.deepEqual(resumo.porModelo.map((m) => m.modelo), ['claude-sonnet-5-5']);
+  assert.deepEqual(resumo.porFamilia.map((f) => f.familia), ['sonnet']);
+  assert.equal(resumo.porFamilia[0].percentual, 100);
+});
+
+test('porProjeto soma entrada + saida por projeto nos ultimos 30 dias e agrupa o excedente', () => {
+  const agregador = criarAgregador();
+  const add = (id, projeto, entrada, ts = '2026-11-09T14:00:00.000Z') =>
+    agregador.adicionarRegistro({ ...registro({ messageId: id, timestamp: ts, tokens: { entrada, leituraCache: 5000 } }), projeto });
+  add('a1', 'grande', 600);
+  add('a2', 'grande', 200);
+  add('b1', 'medio', 200);
+  add('velho', 'antigo', 9999, '2026-09-01T14:00:00.000Z'); // fora dos 30 dias
+  for (let i = 0; i < 9; i++) add(`p${i}`, `pequeno-${i}`, 1); // 9 projetos pequenos: o 8o em diante vira "outros"
+  const { porProjeto } = agregador.obterResumo(AGORA);
+  assert.equal(porProjeto[0].projeto, 'grande');
+  assert.equal(porProjeto[0].principal, 800); // o cache nao entra
+  assert.equal(porProjeto.find((p) => p.projeto === 'antigo'), undefined);
+  assert.equal(porProjeto.length, 9); // 8 nomes + "outros"
+  const outros = porProjeto[8];
+  assert.equal(outros.agrupado, true);
+  assert.equal(outros.principal, 3); // sobraram 3 projetos de 1 token
+  const soma = porProjeto.reduce((acc, p) => acc + p.percentual, 0);
+  assert.ok(Math.abs(soma - 100) < 1e-9);
+});

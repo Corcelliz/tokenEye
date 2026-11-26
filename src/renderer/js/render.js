@@ -47,12 +47,73 @@ window.DashboardRender = (function () {
     }
   }
 
+  // Por projeto: uma barra empilhada com a divisao geral (so os 5 maiores
+  // pedacos tem nome; o resto vira "outros") e, embaixo, a lista com
+  // percentual em destaque. textContent em tudo: o nome vem dos logs.
+  const MAX_PROJETOS_NA_TELA = 5;
+
+  function desenharPorProjeto(porProjeto) {
+    const lista = document.getElementById('lista-projetos');
+    const barra = document.getElementById('barra-projetos');
+    lista.replaceChildren();
+    barra.replaceChildren();
+    if (!porProjeto || porProjeto.length === 0) {
+      const vazio = document.createElement('li');
+      vazio.className = 'projeto-vazio';
+      vazio.textContent = 'Sem dados de projeto nos últimos 30 dias.';
+      lista.appendChild(vazio);
+      return;
+    }
+
+    // Junta tudo que passa do 5o lugar em "outros".
+    const principais = porProjeto.filter((p) => !p.agrupado).slice(0, MAX_PROJETOS_NA_TELA);
+    const resto = porProjeto.filter((p) => p.agrupado || !principais.includes(p));
+    const itens = principais.map((p) => ({ ...p }));
+    if (resto.length > 0) {
+      itens.push({
+        projeto: 'outros',
+        principal: resto.reduce((acc, p) => acc + p.principal, 0),
+        percentual: resto.reduce((acc, p) => acc + p.percentual, 0),
+        agrupado: true,
+      });
+    }
+
+    itens.forEach((projeto, i) => {
+      const classeCor = projeto.agrupado ? 'proj-outros' : `proj-c${i}`;
+      const percentual = projeto.percentual > 0 && projeto.percentual < 1 ? '<1%' : `${Math.round(projeto.percentual)}%`;
+
+      const trecho = document.createElement('span');
+      trecho.className = `trecho-projeto ${classeCor}`;
+      trecho.style.flexGrow = String(Math.max(projeto.percentual, 0.5));
+      trecho.title = `${projeto.projeto}: ${percentual}`;
+      barra.appendChild(trecho);
+
+      const item = document.createElement('li');
+      item.className = 'projeto-item';
+      const amostra = document.createElement('span');
+      amostra.className = `amostra-projeto ${classeCor}`;
+      const nome = document.createElement('span');
+      nome.className = 'projeto-nome';
+      nome.textContent = projeto.projeto;
+      nome.title = projeto.projeto;
+      const pct = document.createElement('span');
+      pct.className = 'projeto-percentual';
+      pct.textContent = percentual;
+      const valor = document.createElement('span');
+      valor.className = 'projeto-valor';
+      valor.textContent = formato.compacto(projeto.principal);
+      item.append(amostra, nome, pct, valor);
+      lista.appendChild(item);
+    });
+  }
+
   function renderizarResumo(resumo) {
     preencherCartaoMetrica('hoje', resumo.hoje);
     preencherCartaoMetrica('dias7', resumo.ultimos7Dias);
     preencherCartaoMetrica('mes', resumo.mesAtual);
     desenharGraficoPorDia(resumo.porDia);
     window.DashboardRosca.desenhar(document.getElementById('rosca-modelos'), resumo.porFamilia);
+    desenharPorProjeto(resumo.porProjeto);
   }
 
   function atualizarIndicadorAoVivo(dataIso) {

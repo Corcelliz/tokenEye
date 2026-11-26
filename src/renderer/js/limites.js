@@ -106,6 +106,7 @@ window.DashboardLimites = (function () {
   }
 
   function renderizarLimites(limites) {
+    window.DashboardHistorico.desenhar(limites.historico, limites.alerta);
     const dados = limites || {};
     const alerta = dados.alerta || { atencao: 80, critico: 95 };
     document.getElementById('limites-vazio').hidden = Boolean(dados.sessao || dados.semana);

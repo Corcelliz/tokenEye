@@ -7,7 +7,25 @@ const path = require('path');
 const electronPath = require('electron');
 
 const pastaFixtures = path.join(__dirname, '..', 'fixtures', 'logs-exemplo');
-const pastaDadosFixtures = path.join(__dirname, '..', 'fixtures', 'limites-exemplo');
+const os = require('os');
+const pastaDadosOriginal = path.join(__dirname, '..', 'fixtures', 'limites-exemplo');
+// A linha do tempo mostra os ultimos 14 dias; por isso o historico ficticio
+// e gerado com datas relativas a hoje numa pasta temporaria (a fixture fica intacta).
+const pastaDadosFixtures = fs.mkdtempSync(path.join(os.tmpdir(), 'dashboard-tokens-screenshot-'));
+fs.copyFileSync(path.join(pastaDadosOriginal, 'limites-auto.json'), path.join(pastaDadosFixtures, 'limites-auto.json'));
+const atras = (horas) => new Date(Date.now() - horas * 3600 * 1000).toISOString();
+fs.writeFileSync(path.join(pastaDadosFixtures, 'limites.json'), JSON.stringify({
+  versao: 1,
+  alerta: { atencao: 80, critico: 95 },
+  leituras: [
+    { lidoEm: atras(300), semana: { percentual: 12, reinicia: 'domingo, 04:00' }, sessao: { percentual: 20, reinicia: 'sáb., 00:30' } },
+    { lidoEm: atras(240), semana: { percentual: 31, reinicia: 'domingo, 04:00' } },
+    { lidoEm: atras(170), semana: { percentual: 52, reinicia: 'domingo, 04:00' }, sessao: { percentual: 61, reinicia: 'sáb., 00:30' } },
+    { lidoEm: atras(120), semana: { percentual: 6, reinicia: 'domingo, 04:00' } },
+    { lidoEm: atras(60), semana: { percentual: 38, reinicia: 'domingo, 04:00' }, sessao: { percentual: 45, reinicia: 'sáb., 00:30' } },
+    { lidoEm: atras(8), semana: { percentual: 84, reinicia: 'domingo, 04:00' }, sessao: { percentual: 36, reinicia: 'sáb., 00:30' } },
+  ],
+}, null, 2));
 const raizProjeto = path.join(__dirname, '..');
 const destinoEsperado = path.join(__dirname, '..', 'docs', 'screenshots', 'dashboard.png');
 const TEMPO_LIMITE_MS = 20000;
@@ -30,6 +48,7 @@ const temporizador = setTimeout(() => {
 
 processo.on('exit', (codigo) => {
   clearTimeout(temporizador);
+  fs.rmSync(pastaDadosFixtures, { recursive: true, force: true });
   if (codigo === 0 && fs.existsSync(destinoEsperado)) {
     const tamanho = fs.statSync(destinoEsperado).size;
     console.log(`screenshot: salvo em ${destinoEsperado} (${tamanho} bytes).`);

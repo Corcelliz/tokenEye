@@ -7,6 +7,16 @@ function somenteNumero(valor) {
   return typeof valor === 'number' && Number.isFinite(valor) ? valor : 0;
 }
 
+// Do campo cwd (pasta onde o Claude Code estava rodando) guarda SO o nome da
+// ultima pasta: '.../projetos/meu-app' -> 'meu-app'. O caminho completo
+// nunca sai daqui, para nao aparecer na tela nem ficar na memoria.
+function nomeDoProjeto(cwd) {
+  if (typeof cwd !== 'string') return 'sem projeto';
+  const partes = cwd.split(/[\\/]+/).filter(Boolean);
+  const nome = partes[partes.length - 1];
+  return nome ? nome.slice(0, 60) : 'sem projeto';
+}
+
 // Devolve { ok: true, registro } quando a linha tem uso de tokens para contar,
 // ou { ok: false, motivo } quando deve ser ignorada (motivo: 'json_invalido'
 // ou 'sem_uso', para as estatisticas de "linhas ignoradas").
@@ -35,6 +45,7 @@ function parseLinha(linhaTexto) {
     timestamp: bruto.timestamp,
     modelo: bruto.message.model || 'desconhecido',
     sessionId: bruto.sessionId || null,
+    projeto: nomeDoProjeto(bruto.cwd),
     isSidechain: Boolean(bruto.isSidechain),
     tokens: {
       entrada: somenteNumero(uso.input_tokens),
@@ -47,4 +58,4 @@ function parseLinha(linhaTexto) {
   return { ok: true, registro };
 }
 
-module.exports = { parseLinha };
+module.exports = { parseLinha, nomeDoProjeto };

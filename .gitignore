@@ -1,6 +1,7 @@
 node_modules/
 dist/
 docs/screenshots/*.png
+!docs/screenshots/dashboard.png
 *.log
 .DS_Store
 Thumbs.db
